@@ -42,7 +42,7 @@ npm run import:dataset -- --dry-run
 npm run import:dataset -- --limit 50
 ```
 
-## 3) What the script does (in plain English)
+## 3) What the script does
 
 For every line in `Automobile.csv`, it will:
 1. Validate the data

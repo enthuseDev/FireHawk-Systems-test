@@ -1,3 +1,4 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./src/**/*.{html,ts,scss}'],
   theme: {
@@ -5,4 +6,3 @@ module.exports = {
   },
   plugins: [require('@tailwindcss/forms')]
 };
-

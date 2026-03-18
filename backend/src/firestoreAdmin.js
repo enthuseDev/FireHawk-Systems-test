@@ -5,7 +5,11 @@ const path = require('path');
 const credentialsPathRaw = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 const firestoreCollection = process.env.FIRESTORE_COLLECTION || 'cars';
 
-if (!admin.apps.length) {
+function ensureInitialized() {
+  if (admin.apps.length) {
+    return admin.firestore();
+  }
+
   if (!credentialsPathRaw) {
     throw new Error(
       'Missing env var GOOGLE_APPLICATION_CREDENTIALS (path to service account JSON).'
@@ -28,13 +32,13 @@ if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
   });
-}
 
-const db = admin.firestore();
+  return admin.firestore();
+}
 
 function carsCollection() {
-  return db.collection(firestoreCollection);
+  return ensureInitialized().collection(firestoreCollection);
 }
 
-module.exports = { db, carsCollection, firestoreCollection };
+module.exports = { ensureInitialized, carsCollection, firestoreCollection };
 
