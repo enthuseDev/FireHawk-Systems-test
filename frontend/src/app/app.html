@@ -184,7 +184,7 @@
   }
 </style>
 
-<main class="main">
+<main class="main hidden">
   <div class="content">
     <div class="left-side">
       <svg
@@ -341,4 +341,24 @@
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
 
 
-<router-outlet />
+<div class="min-h-screen bg-slate-950 text-slate-100">
+  <header class="border-b border-slate-800">
+    <div class="mx-auto max-w-7xl px-4 py-4">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-rose-500/30 to-indigo-500/30 ring-1 ring-white/10">
+            <span class="text-lg">🏎️</span>
+          </div>
+          <div>
+            <div class="text-sm text-slate-300">FireHawk Systems</div>
+            <div class="text-xl font-semibold leading-tight">Car Dataset Explorer</div>
+          </div>
+        </div>
+        <div class="hidden text-sm text-slate-300 md:block">Filter, sort, search, and export CSV</div>
+      </div>
+    </div>
+  </header>
+  <main class="mx-auto max-w-7xl px-4 py-6">
+    <router-outlet />
+  </main>
+</div>
