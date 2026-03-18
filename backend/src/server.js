@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 
+const { carsRouter } = require('./routes/cars');
+
 function createServer() {
   const app = express();
 
@@ -19,6 +21,8 @@ function createServer() {
       time: new Date().toISOString()
     });
   });
+
+  app.use('/api/cars', carsRouter);
 
   return app;
 }
