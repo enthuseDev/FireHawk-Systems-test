@@ -25,7 +25,7 @@ export type Car = {
   weight: NullableNumber;
   acceleration: NullableNumber;
   model_year: NullableNumber;
-  origin: NullableNumber | CarOrigin | string;
+  origin: CarOrigin;
 };
 
 export type CarsQuery = {
