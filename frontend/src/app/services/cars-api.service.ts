@@ -1,4 +1,4 @@
-import { environment } from '../../../environments/environment';
+import { environment } from '../../environments/environment';
 import { Car, CarsListResponse, CarsQuery, NullableNumber, SortField, SortDirection } from '../models/cars';
 
 function toParamValue(value: unknown): string | undefined {
@@ -8,7 +8,7 @@ function toParamValue(value: unknown): string | undefined {
   return s;
 }
 
-function appendNumberIfFinite(params: URLSearchParams, key: string, value: NullableNumber) {
+function appendNumberIfFinite(params: URLSearchParams, key: string, value: NullableNumber | undefined) {
   if (value === undefined || value === null) return;
   if (!Number.isFinite(value)) return;
   params.set(key, String(value));

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, debounceTime, switchMap } from 'rxjs';
@@ -89,8 +89,8 @@ function parseSortDir(value: unknown): SortDirection | undefined {
 
 function buildQueryParamsFromFilters(filters: CarsQuery): Record<string, string> {
   const qp: Record<string, string> = {};
-  if (filters.q) qp.q = filters.q;
-  if (filters.origin) qp.origin = filters.origin;
+  if (filters.q) qp['q'] = filters.q;
+  if (filters.origin) qp['origin'] = filters.origin;
   const setIf = (k: keyof CarsQuery) => {
     const v = filters[k] as unknown;
     const n = parseNullableNumber(v);
@@ -111,10 +111,10 @@ function buildQueryParamsFromFilters(filters: CarsQuery): Record<string, string>
   setIf('modelYearMin');
   setIf('modelYearMax');
 
-  if (filters.sortBy) qp.sortBy = String(filters.sortBy);
-  if (filters.sortDir) qp.sortDir = String(filters.sortDir);
-  if (filters.page) qp.page = String(filters.page);
-  if (filters.pageSize) qp.pageSize = String(filters.pageSize);
+  if (filters.sortBy) qp['sortBy'] = String(filters.sortBy);
+  if (filters.sortDir) qp['sortDir'] = String(filters.sortDir);
+  if (filters.page) qp['page'] = String(filters.page);
+  if (filters.pageSize) qp['pageSize'] = String(filters.pageSize);
   return qp;
 }
 
@@ -329,6 +329,16 @@ function buildQueryParamsFromFilters(filters: CarsQuery): Record<string, string>
             >
               Download CSV
             </button>
+          </div>
+
+          <div *ngIf="csvMessage" class="mt-4 flex items-center gap-2 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-300/20 p-3 text-sm text-emerald-200">
+            <span>✅</span>
+            <span>{{ csvMessage }}</span>
+            <button
+              type="button"
+              class="ml-auto text-emerald-300/60 hover:text-emerald-200"
+              (click)="csvMessage = null"
+            >✕</button>
           </div>
 
           <div *ngIf="error" class="mt-4 rounded-lg bg-rose-500/10 ring-1 ring-rose-300/20 p-3 text-sm text-rose-200">
@@ -629,6 +639,8 @@ export class CarsPageComponent {
 
   addError: string | null = null;
   addSuccess: string | null = null;
+  csvMessage: string | null = null;
+  private csvTimeout: any = null;
 
   newCar: Omit<Car, 'id'> = {
     name: '',
@@ -644,7 +656,7 @@ export class CarsPageComponent {
 
   private applySubject = new Subject<void>();
 
-  constructor(private readonly route: ActivatedRoute, private readonly router: Router) {
+  constructor(private readonly route: ActivatedRoute, private readonly router: Router, private readonly cdr: ChangeDetectorRef) {
     const saved = loadSavedFilters();
     this.filters = saved ? { ...DEFAULTS, ...saved } : { ...DEFAULTS };
 
@@ -660,26 +672,28 @@ export class CarsPageComponent {
 
   private coerceQueryParams(qp: Record<string, string>): CarsQuery {
     const next: CarsQuery = {};
-    if (qp.q !== undefined && qp.q.trim() !== '') next.q = qp.q.trim();
-    next.origin = parseOrigin(qp.origin);
-    next.mpgMin = parseNullableNumber(qp.mpgMin);
-    next.mpgMax = parseNullableNumber(qp.mpgMax);
-    next.cylindersMin = parseNullableNumber(qp.cylindersMin);
-    next.cylindersMax = parseNullableNumber(qp.cylindersMax);
-    next.displacementMin = parseNullableNumber(qp.displacementMin);
-    next.displacementMax = parseNullableNumber(qp.displacementMax);
-    next.horsepowerMin = parseNullableNumber(qp.horsepowerMin);
-    next.horsepowerMax = parseNullableNumber(qp.horsepowerMax);
-    next.weightMin = parseNullableNumber(qp.weightMin);
-    next.weightMax = parseNullableNumber(qp.weightMax);
-    next.accelerationMin = parseNullableNumber(qp.accelerationMin);
-    next.accelerationMax = parseNullableNumber(qp.accelerationMax);
-    next.modelYearMin = parseNullableNumber(qp.modelYearMin);
-    next.modelYearMax = parseNullableNumber(qp.modelYearMax);
-    next.sortBy = parseSortField(qp.sortBy) || next.sortBy;
-    next.sortDir = parseSortDir(qp.sortDir) || next.sortDir;
-    next.page = parseNullableNumber(qp.page);
-    next.pageSize = parseNullableNumber(qp.pageSize);
+    if (qp['q'] !== undefined && qp['q'].trim() !== '') next.q = qp['q'].trim();
+    next.origin = parseOrigin(qp['origin']);
+    next.mpgMin = parseNullableNumber(qp['mpgMin']);
+    next.mpgMax = parseNullableNumber(qp['mpgMax']);
+    next.cylindersMin = parseNullableNumber(qp['cylindersMin']);
+    next.cylindersMax = parseNullableNumber(qp['cylindersMax']);
+    next.displacementMin = parseNullableNumber(qp['displacementMin']);
+    next.displacementMax = parseNullableNumber(qp['displacementMax']);
+    next.horsepowerMin = parseNullableNumber(qp['horsepowerMin']);
+    next.horsepowerMax = parseNullableNumber(qp['horsepowerMax']);
+    next.weightMin = parseNullableNumber(qp['weightMin']);
+    next.weightMax = parseNullableNumber(qp['weightMax']);
+    next.accelerationMin = parseNullableNumber(qp['accelerationMin']);
+    next.accelerationMax = parseNullableNumber(qp['accelerationMax']);
+    next.modelYearMin = parseNullableNumber(qp['modelYearMin']);
+    next.modelYearMax = parseNullableNumber(qp['modelYearMax']);
+    next.sortBy = parseSortField(qp['sortBy']) || next.sortBy;
+    next.sortDir = parseSortDir(qp['sortDir']) || next.sortDir;
+    const parsedPage = parseNullableNumber(qp['page']);
+    next.page = typeof parsedPage === 'number' ? parsedPage : undefined;
+    const parsedPageSize = parseNullableNumber(qp['pageSize']);
+    next.pageSize = typeof parsedPageSize === 'number' ? parsedPageSize : undefined;
     if (!next.page) next.page = undefined;
     if (!next.pageSize) next.pageSize = undefined;
     return next;
@@ -776,6 +790,13 @@ export class CarsPageComponent {
   downloadCsv() {
     saveFilters(this.filters);
     downloadCarsCsv(this.filters);
+    this.csvMessage = `Download started — ${this.total} car${this.total !== 1 ? 's' : ''} exported.`;
+    this.cdr.detectChanges();
+    if (this.csvTimeout) clearTimeout(this.csvTimeout);
+    this.csvTimeout = setTimeout(() => {
+      this.csvMessage = null;
+      this.cdr.detectChanges();
+    }, 4000);
   }
 
   resetNewCar() {
@@ -818,6 +839,7 @@ export class CarsPageComponent {
     };
 
     this.loading = true;
+    this.cdr.detectChanges();
     try {
       await addCar(payload as any);
       this.addSuccess = 'Car added successfully.';
@@ -827,12 +849,14 @@ export class CarsPageComponent {
       this.addError = e?.message || 'Failed to add car.';
     } finally {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 
   private async loadCars() {
     this.loading = true;
     this.error = null;
+    this.cdr.detectChanges();
     try {
       const result: CarsListResponse = await fetchCars(this.filters);
       this.cars = result.items || [];
@@ -849,6 +873,7 @@ export class CarsPageComponent {
       this.totalPages = 1;
     } finally {
       this.loading = false;
+      this.cdr.detectChanges();
     }
   }
 }
